@@ -73,6 +73,30 @@ impl<C: Core, SS: SeedSize, SC, CA, S> Function2<C, SS, SC, CA, S> {
 
 impl<C: Core, SS: SeedSize, SCC: SeedChooserCore, CA: CompressedArray, S: BuildSeededHasher> Function2<C, SS, SCC, CA, S> {
     
+    /// Returns the configuration of the first level (for analysis).
+    #[doc(hidden)]
+    pub fn level0_conf(&self) -> &C {
+        &self.level0.core
+    }
+
+    /// Returns the seed of the given bucket of the first level (`0` means
+    /// that the bucket is bumped; for analysis).
+    #[doc(hidden)]
+    pub fn level0_seed(&self, bucket: usize) -> u16 {
+        assert!(bucket < self.level0.core.buckets_num());
+        unsafe { self.seed_size.get_seed(&self.level0.seeds, bucket) }
+    }
+
+    /// Returns the sizes in bytes of the first level, of the array mapping the
+    /// outputs of the further levels to the free values of the first one, and
+    /// of the further levels (for analysis).
+    #[doc(hidden)]
+    pub fn component_sizes(&self) -> (usize, usize, usize) where CA: GetSize {
+        (self.level0.size_bytes_dyn(),
+         self.bumped_index_to_value.size_bytes_dyn(),
+         self.bumped_to_index.size_bytes_dyn() + self.last_level.size_bytes_dyn())
+    }
+
     /// Returns value assigned to the given `key`.
     /// 
     /// The returned value is in the range from `0` (inclusive) to the number of elements in the input key `self.output_range()` (exclusive).
